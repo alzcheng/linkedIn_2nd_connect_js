@@ -1,6 +1,7 @@
 const puppeteer = require('puppeteer');
-//test company: Stanley Black & Decker
-let company = "Stanley%2520Black%2520%2526%2520Decker";
+
+//Insert company
+let company = '';
 
 const secondConnect = async (company) => {
 
@@ -10,10 +11,10 @@ const secondConnect = async (company) => {
 
     await page.goto('https://www.linkedin.com/');
 
-    //Add your LinkedIn user email
+    //Enter your LinkedIn user email
     await page.type('#session_key', '');
 
-    //Add your LinkedIn user password
+    //Enter your LinkedIn user password
     await page.type('#session_password', '');
 
     await page.click('.sign-in-form__submit-button');
@@ -23,7 +24,7 @@ const secondConnect = async (company) => {
     //This will wait for the #ember20 button to appear on the page to verify that you
     //have logged into LinkedIn. 
     await page.waitForSelector('#ember20', { timeout: 60000 }).then(() => {
-        console.log("I'm in");
+        console.log(`I'm in`);
     });
 
     //Now that you have logged into LinkedIn, go to Sales Navigator on LinkedIn
@@ -31,15 +32,15 @@ const secondConnect = async (company) => {
 
     //Wait until the search page is loaded 
     await page.waitForSelector('.search-results__result-item', { timeout: 60000 }).then(() => {
-        console.log("Search Successful");
+        console.log('Search Successful');
     });
 
     //Create an array of links to the Sales Navigator pages of the secondary connections
     let links = await page.$$eval('.search-results__result-item', results => {
         let arr = [];
-        let peopleHeader = "http://www.linkedin.com/sales/people/";
+        let peopleHeader = 'http://www.linkedin.com/sales/people/';
         results.forEach(item => {
-            arr.push(peopleHeader.concat(item.getAttribute("data-scroll-into-view").slice(24, -1)))
+            arr.push(peopleHeader.concat(item.getAttribute('data-scroll-into-view').slice(24, -1)))
         });
         return arr;
     });
@@ -62,7 +63,7 @@ const secondConnect = async (company) => {
 
         let placeholder = await page.$$eval('.search-results__result-item', results => {
             let arr = [];
-            let peopleHeader = "http://www.linkedin.com/sales/people/";
+            let peopleHeader = 'http://www.linkedin.com/sales/people/';
             results.forEach(item => {
                 arr.push(peopleHeader.concat(item.getAttribute("data-scroll-into-view").slice(24, -1)))
             });
@@ -70,10 +71,53 @@ const secondConnect = async (company) => {
         });
         placeholder.forEach(item => links.push(item));
     }
-
     //If you want to see the links, uncomment below
     //console.log(links)
-    //await browser.close();
+
+    //Go through all the links on Sales Navigator.  For each of the links, scrape the following: 
+    // 1) Name of the contact - document.querySelector('.profile-topcard-person-entity__name').innerText
+    // 2) Contact Role - document.querySelector('dd.mt2').innerText
+    // 3) Best introducer - document.querySelector('[data-control-name="highlights_best_path_in_introducer_name"]').innerText
+    //Putting all of this in a object called contactProfiles
+    const contactProfiles = [];
+    for (i = 0; i < links.length; i++) {
+        try {
+            await page.goto(links[i]);
+            await page.waitForSelector('[data-control-name="highlights_best_path_in_introducer_name"]');
+            let profile = {
+                name: "",
+                role: "",
+                connection: "",
+                link: ""
+            };
+            profile.name = await page.$eval('.profile-topcard-person-entity__name', item => { return item.innerText });
+            profile.role = await page.$eval('dd.mt2', item => {
+                //In the case the profile doesn't have a role
+                if (item == null) {
+                    return "No role"
+                } else {
+                    return item.innerText
+                }
+            });
+            profile.connection = await page.$eval('[data-control-name="highlights_best_path_in_introducer_name"]', item => {
+                //In the case the profile doesn't have a best connection
+                if (item == null) {
+                    return "No best connection"
+                } else {
+                    return item.innerText
+                }
+            });
+            profile.link = links[i];
+            contactProfiles.push(profile);
+        } catch (e) {
+            console.log('\n' + i);
+            console.log('ERROR', e);
+            await page.reload(links[i]);
+        }
+    }
+
+    console.log(contactProfiles);
+
 };
 
 secondConnect(company);
