@@ -7,7 +7,6 @@ const secondConnect = async (company) => {
     //Launch and setup
     const browser = await puppeteer.launch({ headless: false });
     const page = await browser.newPage();
-    let links = [];
 
     await page.goto('https://www.linkedin.com/');
 
@@ -25,27 +24,31 @@ const secondConnect = async (company) => {
     await page.goto(`https://www.linkedin.com/sales/search/people?companyIncluded=${company}&companyTimeScope=CURRENT&doFetchHeroCard=false&logHistory=true&page=1&relationship=F%2CS`);
 
     //Wait until the search page is loaded 
-    await page.waitForSelector('#ember48', { timeout: 60000 }).then(() => {
+    await page.waitForSelector('.search-results__result-item', { timeout: 60000 }).then(() => {
         console.log("Search Successful");
-        let extracts = document.querySelectorAll('.search-results__result-item');
-        let peopleHeader = "http://www.linkedin.com/sales/people/";
-        //let pgCount = Math.ceil(parseInt(document.querySelector('#search-spotlight-tab-ALL').firstChild.innerText) / 25);
-
-        extracts.forEach(item => {
-            links.push(peopleHeader.concat(item.getAttribute("data-scroll-into-view").slice(24, -1)))
-        });
-        console.log(links);
     });
+
+    //Create an array of links of the secondary connections
+    let links = await page.$$eval('.search-results__result-item', results => {
+        let arr = [];
+        let peopleHeader = "http://www.linkedin.com/sales/people/";
+        results.forEach(item => {
+            arr.push(peopleHeader.concat(item.getAttribute("data-scroll-into-view").slice(24, -1)))
+        });
+        return arr;
+    });
+    console.log(links);//test - works! 
 
     //Code below does not work----------------------------------------------------------------
-    let extracts = document.querySelectorAll('.search-results__result-item');
-    let peopleHeader = "http://www.linkedin.com/sales/people/";
-    //let pgCount = Math.ceil(parseInt(document.querySelector('#search-spotlight-tab-ALL').firstChild.innerText) / 25);
 
-    extracts.forEach(item => {
-        links.push(peopleHeader.concat(item.getAttribute("data-scroll-into-view").slice(24, -1)))
-    });
-    console.log(links);
+    // let peopleHeader = "http://www.linkedin.com/sales/people/";
+    // let extracts = await page.$$('.search-results__result-item');
+    // //let pgCount = Math.ceil(parseInt(document.querySelector('#search-spotlight-tab-ALL').firstChild.innerText) / 25);
+
+    // extracts.forEach(item => {
+    //     links.push(peopleHeader.concat(item.getAttribute("data-scroll-into-view").slice(24, -1)))
+    // });
+    // console.log(links);
 
     // for (let i = 2; i < pgCount; i++) {
 
