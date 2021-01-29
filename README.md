@@ -30,7 +30,6 @@
 
   ## Bugs and Further Development
   * The company name must be entered with replacing spaces by "%2520" and "&" by "%2526".
-  * Included in the package.json is csv-writer. A further development could be to write the data to a csv file.  See [link](https://stackabuse.com/reading-and-writing-csv-files-with-node-js/) for a quick tutorial on how to use csv-writer. 
   *  Another further development could be for a user interface.   
   
   ## Questions
