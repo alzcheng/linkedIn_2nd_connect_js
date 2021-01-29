@@ -1,7 +1,20 @@
 const puppeteer = require('puppeteer');
+const createCsvWriter = require('csv-writer').createObjectCsvWriter;
+
 
 //Insert company
-let company = '';
+let company = 'Next47';
+
+const csvWriter = createCsvWriter({
+    path: `${company}_2ndConnections.csv`,
+    header: [
+        { id: 'name', title: 'Name' },
+        { id: 'role', title: 'Role' },
+        { id: 'connection', title: 'Connection' },
+        { id: 'link', title: 'LinkedIn Link' },
+    ]
+});
+
 
 const secondConnect = async (company) => {
 
@@ -12,10 +25,10 @@ const secondConnect = async (company) => {
     await page.goto('https://www.linkedin.com/');
 
     //Enter your LinkedIn user email
-    await page.type('#session_key', '');
+    await page.type('#session_key', 'albertzcheng@gmail.com');
 
     //Enter your LinkedIn user password
-    await page.type('#session_password', '');
+    await page.type('#session_password', 'Birth1986!');
 
     await page.click('.sign-in-form__submit-button');
 
@@ -117,7 +130,11 @@ const secondConnect = async (company) => {
     }
 
     console.log(contactProfiles);
-
+    //Print the contactProfiles as a csv file. 
+    csvWriter
+        .writeRecords(contactProfiles)
+        .then(() => console.log('The CSV file was written successfully'));
 };
 
 secondConnect(company);
+
